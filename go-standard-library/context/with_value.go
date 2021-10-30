@@ -1,12 +1,11 @@
-package context
+package main
 
 import (
 	"context"
 	"fmt"
-	"testing"
 )
 
-func TestWithValue(t *testing.T) {
+func main() {
 	ctx1 := context.WithValue(context.Background(), "key1", "value1")
 	ctx2 := context.WithValue(ctx1, "key2", "value2")
 
