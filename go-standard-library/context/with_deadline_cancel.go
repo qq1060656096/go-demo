@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+func main()  {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5 * time.Second))
 	go func() {
 		time.Sleep(6 * time.Second)
 		fmt.Println("自动取消")
