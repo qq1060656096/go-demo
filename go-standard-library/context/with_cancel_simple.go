@@ -5,7 +5,8 @@ import (
 	"fmt"
 )
 
-func main()  {
+// 简单示例
+func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
