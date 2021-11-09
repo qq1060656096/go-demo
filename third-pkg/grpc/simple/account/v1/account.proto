@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// 定义生成包名
+option go_package="account/v1";
+
+package demo.account.v1;
+
+// 定义服务接口
+service AccountService {
+  rpc LoginAccount(LoginAccountRequest) returns (Account) {}
+}
+
+// 定义 AccountService 服务请求参数
+message LoginAccountRequest {
+  string Name = 1;
+  string Pass = 2;
+}
+
+// 定义 AccountService 服务返回参数
+message Account {
+  string Name = 1;
+  string Pass = 2;
+}
