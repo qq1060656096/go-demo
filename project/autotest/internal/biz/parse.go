@@ -2,6 +2,7 @@ package biz
 
 import (
 	"bytes"
+	"github.com/pkg/errors"
 	"log"
 	"text/template"
 )
@@ -56,7 +57,9 @@ func ParseStringApiObject(obj *ApiObject, text string, data interface{}) string 
 		return text
 	}
 	obj.AutoNewTemplate()
+	old := text
 	text, err := ParseString(obj.Template, text, data)
+	err = errors.Wrapf(err, "ParseStringApiObject: %s", old)
 	obj.SetErr(err)
 	return text
 }

@@ -1,3 +1,3 @@
 package biz
 
-type Assert map[int]string
+type Assert []string

@@ -2,6 +2,7 @@ package biz
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
@@ -28,6 +29,9 @@ func TestParseString(t *testing.T) {
 		SetVar: SetVars{
 			//"global.Name": "{{.responseJsonBody.name}}",
 		},
+		Assert: Assert{
+			"{{eq .response.StatusCode 200}}",
+		},
 	}
 	(*data.Vars.Global)["host"] = "http://localhost:8080"
 	data.Run()
@@ -46,6 +50,7 @@ func TestParseString(t *testing.T) {
 `
 
 	s = ParseStringApiObject(data, text, data.Data)
-	fmt.Println(s, "err: ", data.Err(), " ++++", data.Data)
-	fmt.Printf("%v", data.Data)
+	fmt.Println(s, "err: ", data.Err(), " ++++", data.errs)
+	fmt.Printf(">>>> %v", data.AssertResult)
+	assert.Equal(t, true, data.AssertResult)
 }

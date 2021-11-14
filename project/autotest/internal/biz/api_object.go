@@ -3,8 +3,10 @@ package biz
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -18,6 +20,7 @@ type ApiObject struct {
 	Vars *Vars
 	SetVar SetVars
 	Assert Assert
+	AssertResult bool
 	Template *template.Template
 	Headers Headers
 	Request *http.Request
@@ -26,6 +29,7 @@ type ApiObject struct {
 	ResponseBody string
 	Data map[string]interface{}
 	err error
+	errs []error
 }
 func (obj *ApiObject) AutoNewTemplate() {
 	if obj.Err() != nil {
@@ -43,9 +47,8 @@ func (obj *ApiObject) Before()  {
 		return
 	}
 	data, err := ApiObjectConvertParseData(obj)
-	if err != nil {
-		obj.err = err
-	}
+	err = errors.Wrap(err, "Before ApiObjectConvertParseData fail")
+	obj.SetErr(err)
 	// 1. 创建 request
 	// 2. 解析 url，合并 url query
 	// 3. 解析 queryParams， 合并 queryParams
@@ -65,7 +68,11 @@ func (obj *ApiObject) Execute()  {
 	if obj.Err() != nil {
 		return
 	}
-	obj.Response, obj.err = obj.Client.Do(obj.Request)
+	response, err := obj.Client.Do(obj.Request)
+	obj.Response = response
+	err = errors.Wrap(err, "Execute Client.Do fail")
+	obj.SetErr(err)
+
 }
 
 func (obj *ApiObject) After()  {
@@ -80,6 +87,7 @@ func (obj *ApiObject) ParseVars()  {
 		return
 	}
 	data, err := ApiObjectConvertParseData(obj)
+	err = errors.Wrap(err, "ParseVars ApiObjectConvertParseData fail")
 	obj.SetErr(err)
 	for k, v := range obj.SetVar {
 		if strings.HasPrefix(k, "global") {
@@ -118,11 +126,29 @@ func (obj *ApiObject) ParseVars()  {
 	obj.Data = data
 }
 
+func (obj *ApiObject) assert() {
+	data, err := ApiObjectConvertParseData(obj)
+	err = errors.Wrap(err, "assert ApiObjectConvertParseData fail")
+	obj.SetErr(err)
+	assertResult := true
+	for _, v := range obj.Assert {
+		result := ParseStringApiObject(obj, v, data)
+		resultBool, err := strconv.ParseBool(result)
+		errors.Wrapf(err, "assert fail: %s", v)
+		obj.SetErr(err)
+		if !resultBool {
+			assertResult = false
+		}
+	}
+	obj.AssertResult = assertResult
+}
+
 func (obj *ApiObject) Run()  {
 	obj.Before()
 	obj.Execute()
 	obj.After()
 	obj.ParseVars()
+	obj.assert()
 }
 
 func (obj *ApiObject) Err() error {
@@ -130,10 +156,19 @@ func (obj *ApiObject) Err() error {
 }
 
 func (obj *ApiObject) SetErr(err error) {
+	obj.SetErrs(err)
 	if obj.err != nil {
 		return
 	}
 	obj.err = err
+}
+
+func (obj *ApiObject) SetErrs(err error) {
+	if obj.errs == nil {
+		obj.errs = make([]error, 0)
+		return
+	}
+	obj.errs = append(obj.errs, err)
 }
 
 func (obj *ApiObject) AutoNewRequest() {
@@ -166,30 +201,30 @@ func ApiObjectConvertParseData(obj *ApiObject) (map[string]interface{}, error) {
 	data["responseBody"] = obj.ResponseBody
 	data["responseJsonBody"] = obj.ResponseJsonBody
 	if obj.Response == nil {
-		return data, err
+		return data, errors.Wrap(err, "Response is nil")
 	}
 	if  obj.Response.Body == nil{
-		return data, err
+		return data, errors.Wrap(err, "Response.Body is nil")
 	}
 
-	if  obj.ResponseBody != "" || obj.ResponseJsonBody != nil {
-		//return data, err
-	}
-	body, err = ioutil.ReadAll(obj.Response.Body)
-	obj.ResponseBody = string(body)
-	data["responseBody"] = obj.ResponseBody
-	if err != nil {
-		return data, err
+	if  obj.ResponseBody == "" {
+		body, err = ioutil.ReadAll(obj.Response.Body)
+		obj.ResponseBody = string(body)
+		data["responseBody"] = obj.ResponseBody
+		if err != nil {
+			return data, errors.Wrap(err, "Response.Body read all fail")
+		}
 	}
 
 	if obj.ResponseJsonBody == nil {
 		obj.ResponseJsonBody = make(map[string]interface{}, 0)
+		err = json.Unmarshal(body, &obj.ResponseJsonBody)
+		data["responseJsonBody"] = obj.ResponseJsonBody
+		if err != nil {
+			return data, errors.Wrap(err, "Response.Body json Unmarshal fail")
+		}
 	}
-	err = json.Unmarshal(body, &obj.ResponseJsonBody)
-	data["responseJsonBody"] = obj.ResponseJsonBody
-	if err != nil {
-		return data, err
-	}
+
 
 	return data, err
 }
