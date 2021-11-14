@@ -1,0 +1,19 @@
+Name: ""
+before: ""
+request:
+  method: post
+  url: "baidu.com"
+  headers:
+    cookie: ""
+    token: ""
+  queryParams:
+    id: ""
+  body:
+    type: "raw|form-data|none|binary"
+    binary: ""
+    raw: ""
+    content:
+      - name: "name"
+        type: "file"
+        value: ""
+  setVars
