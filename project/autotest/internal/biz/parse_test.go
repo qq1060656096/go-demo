@@ -35,13 +35,14 @@ func TestParseString(t *testing.T) {
 	fmt.Println(">>>>>><<<<<<<", s, err, data.Err())
 	text = `
 {{.}}
-<<<<<<<
-{{.responseJsonBody.name}}
-{{.responseBody}}
 {{.global}}
 {{.session}}
 {{.local}}
-
+{{.request}}
+{{.response}}
+{{.response.StatusCode}}
+{{.responseJsonBody.name}}
+{{.responseBody}}
 `
 
 	s = ParseStringApiObject(data, text, data.Data)
