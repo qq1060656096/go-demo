@@ -1,19 +1,24 @@
-Name: ""
-before: ""
-request:
-  method: post
-  url: "baidu.com"
-  headers:
-    cookie: ""
-    token: ""
-  queryParams:
-    id: ""
-  body:
-    type: "raw|form-data|none|binary"
-    binary: ""
-    raw: ""
-    content:
-      - name: "name"
-        type: "file"
-        value: ""
-  setVars
+environment:
+  vars:
+    global:
+      host: "http://baidu.com"
+      contentType: "application/json"
+testusecase:
+  ID: "login"
+  Name: "登录"
+  Method: "POST"
+  Url: "{{.global.host}}/login"
+  QueryParams:
+    Name: "123"
+    age: 18
+  Vars:
+    session:
+      loginVar: "login api "
+  Headers:
+    "content-type": "application/json"
+  Body:
+    type: "json"
+    raw: { "nickname": "小白兔" }
+  Assert:
+      "response.statusCode == 200"
+      "responseJsonBody.uid >= 0"

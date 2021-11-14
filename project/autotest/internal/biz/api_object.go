@@ -17,6 +17,7 @@ type ApiObject struct {
 	QueryParams map[string]string
 	Vars *Vars
 	SetVar SetVars
+	Assert Assert
 	Template *template.Template
 	Headers Headers
 	Request *http.Request
@@ -74,7 +75,7 @@ func (obj *ApiObject) After()  {
 
 }
 
-func (obj *ApiObject) SetVars()  {
+func (obj *ApiObject) ParseVars()  {
 	if obj.Err() != nil {
 		return
 	}
@@ -121,7 +122,7 @@ func (obj *ApiObject) Run()  {
 	obj.Before()
 	obj.Execute()
 	obj.After()
-	obj.SetVars()
+	obj.ParseVars()
 }
 
 func (obj *ApiObject) Err() error {

@@ -4,8 +4,9 @@ type TestObject interface {
 	Before()
 	Execute()
 	After()
-	SetVars()
+	ParseVars()
 	Run()
 	Err()
-	SetErr()
+	SetErr(err error)
+	Errs()
 }
