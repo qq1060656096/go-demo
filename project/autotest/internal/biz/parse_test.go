@@ -1,20 +1,18 @@
 package biz
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
+	"log"
 	"net/http"
 	"testing"
 )
 
 func TestParseString(t *testing.T) {
-	text := `
-{{.}}
-`
+
 	headers := *NewHeaders()
 	headers["token"] = "123"
 
-	data := &ApiObject{
+	apiObj := &ApiObject{
 		Name: "测试用例1",
 		Method: "POST",
 		Url: "{{.global.host}}",
@@ -33,11 +31,9 @@ func TestParseString(t *testing.T) {
 			"{{eq .response.StatusCode 200}}",
 		},
 	}
-	(*data.Vars.Global)["host"] = "http://localhost:8080"
-	data.Run()
-	s, err := ParseString(data.Template, text, data.Data)
-	fmt.Println(">>>>>><<<<<<<", s, err, data.Err())
-	text = `
+	apiObj.Vars.Global["host"] = "http://localhost:8080"
+	apiObj.Run()
+	text := `
 {{.}}
 {{.global}}
 {{.session}}
@@ -48,9 +44,8 @@ func TestParseString(t *testing.T) {
 {{.responseJsonBody.name}}
 {{.responseBody}}
 `
-
-	s = ParseStringApiObject(data, text, data.Data)
-	fmt.Println(s, "err: ", data.Err(), " ++++", data.errs)
-	fmt.Printf(">>>> %v", data.AssertResult)
-	assert.Equal(t, true, data.AssertResult)
+	textResult := ParseStringApiObject("testLog", apiObj, text, apiObj.TemplateData)
+	log.Println(apiObj.Errs())
+	log.Println("textResult: ", textResult)
+	assert.Equal(t, true, apiObj.AssertResult)
 }

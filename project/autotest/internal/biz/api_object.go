@@ -27,7 +27,7 @@ type ApiObject struct {
 	Response *http.Response
 	ResponseJsonBody interface{}
 	ResponseBody string
-	Data map[string]interface{}
+	TemplateData map[string]interface{}
 	err error
 	errs []error
 }
@@ -47,13 +47,14 @@ func (obj *ApiObject) Before()  {
 		return
 	}
 	data, err := ApiObjectConvertParseData(obj)
+	obj.TemplateData = data
 	err = errors.Wrap(err, "Before ApiObjectConvertParseData fail")
 	obj.SetErr(err)
 	// 1. 创建 request
 	// 2. 解析 url，合并 url query
 	// 3. 解析 queryParams， 合并 queryParams
 	// 4. 解析headers， 合并 headers
-	obj.Url = ParseStringApiObject(obj, obj.Url, data)
+	obj.Url = ParseStringApiObject("BeforeParseUrlVar", obj, obj.Url, data)
 	obj.AutoNewRequest()
 
 	queryParams := ParseQueryParamsApiObject(obj, data)
@@ -92,47 +93,48 @@ func (obj *ApiObject) ParseVars()  {
 	for k, v := range obj.SetVar {
 		if strings.HasPrefix(k, "global") {
 			t := strings.TrimPrefix(k, "global")
-			(*obj.Vars.Global)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Global[t] = ParseStringApiObject("ParseVarsGlobal", obj, v, data)
 			continue
 		}
 		if strings.HasPrefix(k, ".global") {
 			t := strings.TrimPrefix(k, ".global")
-			(*obj.Vars.Global)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Global[t] = ParseStringApiObject("ParseVars.Global", obj, v, data)
 			continue
 		}
 
 		if strings.HasPrefix(k, "session") {
 			t := strings.TrimPrefix(k, "session")
-			(*obj.Vars.Session)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Session[t] = ParseStringApiObject("ParseVarsSession", obj, v, data)
 			continue
 		}
 		if strings.HasPrefix(k, ".session") {
 			t := strings.TrimPrefix(k, ".session")
-			(*obj.Vars.Session)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Session[t] = ParseStringApiObject("ParseVars.Session", obj, v, data)
 			continue
 		}
 
 		if strings.HasPrefix(k, "local") {
 			t := strings.TrimPrefix(k, "local")
-			(*obj.Vars.Local)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Local[t] = ParseStringApiObject("ParseVarsLocal", obj, v, data)
 			continue
 		}
 		if strings.HasPrefix(k, ".local") {
 			t := strings.TrimPrefix(k, ".local")
-			(*obj.Vars.Local)[t] = ParseStringApiObject(obj, v, data)
+			obj.Vars.Local[t] = ParseStringApiObject("ParseVars.local", obj, v, data)
 			continue
 		}
 	}
-	obj.Data = data
+	obj.TemplateData = data
 }
 
 func (obj *ApiObject) assert() {
 	data, err := ApiObjectConvertParseData(obj)
+	obj.TemplateData = data
 	err = errors.Wrap(err, "assert ApiObjectConvertParseData fail")
 	obj.SetErr(err)
 	assertResult := true
 	for _, v := range obj.Assert {
-		result := ParseStringApiObject(obj, v, data)
+		result := ParseStringApiObject("assert", obj, v, data)
 		resultBool, err := strconv.ParseBool(result)
 		errors.Wrapf(err, "assert fail: %s", v)
 		obj.SetErr(err)
@@ -163,7 +165,15 @@ func (obj *ApiObject) SetErr(err error) {
 	obj.err = err
 }
 
+func (obj *ApiObject) Errs() []error {
+	return obj.errs
+}
+
 func (obj *ApiObject) SetErrs(err error) {
+	if (err == nil) {
+		return
+	}
+
 	if obj.errs == nil {
 		obj.errs = make([]error, 0)
 		return

@@ -3,14 +3,12 @@ package biz
 import (
 	"bytes"
 	"github.com/pkg/errors"
-	"log"
 	"text/template"
 )
 
 func Parse(t *template.Template, text string, data interface{}) (bytes.Buffer, error) {
 	var b bytes.Buffer
 	t1, err := t.Parse(text)
-	log.Println(">>>bbbbbbb: ", t, err)
 	err = t1.Execute(&b, data)
 	return b, err
 }
@@ -42,24 +40,24 @@ func ParseQueryParams(params QueryParams, parse func(text string) string) QueryP
 
 func ParseQueryParamsApiObject(obj *ApiObject, data interface{}) QueryParams {
 	return ParseQueryParams(obj.QueryParams, func(text string) string {
-		return ParseStringApiObject(obj, text, data)
+		return ParseStringApiObject("ParseQueryParamsApiObject", obj, text, data)
 	})
 }
 
 func ParseHeadersParamsApiObject(obj *ApiObject, data interface{}) Headers {
 	return ParseHeaders(obj.Headers, func(text string) string {
-		return ParseStringApiObject(obj, text, data)
+		return ParseStringApiObject("ParseHeadersParamsApiObject", obj, text, data)
 	})
 }
 
-func ParseStringApiObject(obj *ApiObject, text string, data interface{}) string {
+func ParseStringApiObject(opName string, obj *ApiObject, text string, data interface{}) string {
 	if obj.Err() != nil {
 		return text
 	}
 	obj.AutoNewTemplate()
 	old := text
 	text, err := ParseString(obj.Template, text, data)
-	err = errors.Wrapf(err, "ParseStringApiObject: %s", old)
+	err = errors.Wrapf(err, "%s: %s", opName, old)
 	obj.SetErr(err)
 	return text
 }

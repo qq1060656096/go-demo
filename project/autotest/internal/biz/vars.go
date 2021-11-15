@@ -3,14 +3,14 @@ package biz
 type Var map[string]interface{}
 
 type Vars struct {
-	Global *Var
-	Session *Var
-	Local *Var
+	Global Var
+	Session Var
+	Local Var
 }
 
-func NewVar() * Var {
+func NewVar() Var {
 	v := make(Var, 10)
-	return &v
+	return v
 }
 
 func NewVars() * Vars {

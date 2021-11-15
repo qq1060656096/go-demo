@@ -18,7 +18,9 @@ testusecase:
     "content-type": "application/json"
   Body:
     type: "json"
-    raw: { "nickname": "小白兔" }
+    json:
+    content: { "nickname": "小白兔" }
   Assert:
       "{{.response.statusCode == 200}}"
       "responseJsonBody.uid >= 0"
+
