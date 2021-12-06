@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+// 定义生成包名
+option go_package="account/v1";
+
+package demo.account.v1;
+
+service Account {
+  rpc Login(LoginRequest) returns(LoginResponse);
+  rpc GetInfo(InfoRequest) returns(InfoResponse);
+}
+
+message LoginRequest {
+  string Name = 1;
+  string Pass = 2;
+}
+
+message LoginResponse {
+  string Token = 1;
+}
+
+message InfoRequest {
+  string Name = 1;
+}
+
+message InfoResponse {
+  string Name = 1;
+  string Pass = 2;
+}

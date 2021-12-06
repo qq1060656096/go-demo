@@ -10,6 +10,7 @@ func Parse(t *template.Template, text string, data interface{}) (bytes.Buffer, e
 	var b bytes.Buffer
 	t1, err := t.Parse(text)
 	err = t1.Execute(&b, data)
+	errgroup.
 	return b, err
 }
 
