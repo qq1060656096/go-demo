@@ -37,4 +37,12 @@ protoc --go_out=./ account/v1/account.proto
 protoc --go-grpc_out=. account/v1/account.proto
 
 
+
+
+```sh
+# 启动服务端
+go run grpc-server.go 
+
+# 启动客户端
+go run grpc-client.go 
 ```
